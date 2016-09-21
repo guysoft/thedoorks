@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 import os.path
 import json
-
+import argparse
 
 def get_bounding_box(points):
-    left = points[0][0]
-    top = points[0][1]
-    right = points[0][0]
-    bottom= points[0][1]
+    left = int(points[0][0])
+    top = int(points[0][1])
+    right = int(points[0][0])
+    bottom= int(points[0][1])
 
     for point in points:
+        point = [int(point[0]), int(point[1])]
         if left >  point[0]:
             left = point[0]
         if top > point[1]:
@@ -21,12 +22,20 @@ def get_bounding_box(points):
     return left, top, right, bottom
 
 
-def prase_svg(file_path):
-    return_value = {}
-    return_value["doors"] = []
+def read_file_to_var(file_path):
     data = None
     with open(file_path, "r") as myfile:
         data=myfile.readlines()
+    return data
+
+
+def prase_svg(file_path):
+    """
+    Takes an svfile and returns a dict with the doors bounding box
+    """
+    return_value = {}
+    return_value["doors"] = []
+    data = read_file_to_var(file_path)
 
     for line in data:
         line=line.strip()
@@ -46,7 +55,18 @@ def prase_svg(file_path):
             return_value["doors"].append(bounding_box)
     return return_value
 
+
+def hangleArgs():
+    """ Handle input flags """
+    parser = argparse.ArgumentParser(add_help=True, description='Parse the strange svg format from ImagesGT')
+    parser.add_argument('svg_file', type=str,
+                        help='path to svg file')
+    
+    args = parser.parse_args()
+    return args
+    
+    
 if __name__ == "__main__":
-    import sys
     test_image = "/tmp/annote.svg"
-    print(json.dumps(prase_svg(sys.argv[1])))
+    
+    print(json.dumps(prase_svg(hangleArgs().svg_file)))
