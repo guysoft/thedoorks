@@ -21,6 +21,18 @@ def hangleArgs():
     args = parser.parse_args()
     return args
 
+def color_bounding_boxes(img, bounding_boxes):
+    """
+    Paint on an existing image the bounding boxes in blue
+    
+    :param img: the opencv image
+    :param bounding boxes: a list of bounding boxes, format [top, left, right, bottom]
+    :returns: the same img after we edited it
+    """
+    for door in doors:
+        cv2.rectangle(image, (door[0], door[1]), (door[2], door[3]), (255,0,0), 2)
+    return img
+
 if __name__ == "__main__":
     args = hangleArgs()
     test_file = args.img_file
@@ -29,10 +41,8 @@ if __name__ == "__main__":
     
     doors = prase_svg(test_file_annote)["doors"]
     image = cv2.imread(test_file)
-    
-    for door in doors:
-        cv2.rectangle(image, (door[0], door[1]), (door[2], door[3]), (255,0,0), 2)
+    out = color_bounding_boxes(image, doors)
                       
-    cv2.imwrite(args.output_file, image)
+    cv2.imwrite(args.output_file, out)
     
     
