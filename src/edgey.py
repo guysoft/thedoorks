@@ -7,14 +7,18 @@ Created on Wed Sep 21 22:09:47 2016
 
 import cv2
 import glob
+
+imglib = "D:\\ImagesGT\\"
+outlib = "D:\\ImagesGT\\edge\\"   #must exsist
+
 #import numpy as np
 #from matplotlib import pyplot as plt
 
-for file in glob.glob("D:\\ImagesGT\\*.png"):
+for file in glob.glob(imglib + "*.png"):
     print(file)
     img = cv2.imread(file,0)
     edges = cv2.Canny(img,100,200)
-    cv2.imwrite("D:\\ImagesGT\\edge\\" + file[12:],edges)
+    cv2.imwrite(outlib + file[len(imglib):],edges)
     
     
 #
