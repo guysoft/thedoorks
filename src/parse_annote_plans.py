@@ -4,6 +4,8 @@ import glob
 import json
 import argparse
 import cv2
+import numpy
+import shutil
 
 def get_bounding_box(points):
     left = int(float(points[0][0]))
@@ -67,7 +69,10 @@ def hangleArgs():
     args = parser.parse_args()
     return args
     
-BOUNDING_BOX_FD = 'BBs\\'
+def cv_resize(img, scale_ratio):
+    return cv2.resize(img, None,fx=scale_ratio, fy=scale_ratio, interpolation = cv2.INTER_LINEAR) # used to be cv2.INTER_CUBIC
+
+    
 imglib = "D:\\ImagesGT\\"
 
 def create_sliding_windows(stride,bb_size):
@@ -79,34 +84,59 @@ def create_sliding_windows(stride,bb_size):
     img = []
     for file in glob.glob(imglib +'*.svg'):
         filename= file[:file.rfind("_gt")]+".png"
+        if numpy.random.rand(1)[0] <0.1:
+          shutil.copy(file,imglib + "test\\")
+          shutil.copy(filename,imglib + "test\\")
+          continue
         print (filename)
         img = cv2.imread(filename)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        imgl = [(1,img),(2,cv_resize(img, 0.5)),(4,cv_resize(img, 0.25))]
         
         doors = prase_svg(file)["doors"]
         
         f_name = filename.split('\\')
         f_name = f_name[len(f_name)-1].split('.')[0]
        
-        i=0
-        rows,cols = img.shape
-        for y in range(0, cols-bb_size, stride):
-            for x in range(0,rows- bb_size, stride):
+        
+        for z,zoom in imgl:
+            i=0
+            rows,cols = zoom.shape
+            for y in range(0, cols-bb_size, stride):
+                for x in range(0,rows- bb_size, stride):
                 
-                bb=img[x:x+bb_size, y:y+bb_size]
+                
+                    bb=zoom[x:x+bb_size, y:y+bb_size]
              #   bb = img[y:y+h,x:x+w]
-                path = not_doors_path
-                for door in doors:
-                    if y<=door[0] and x<=door[1] and y+bb_size >= door[2] and x+bb_size >= door[3]:
-                        path = doors_path
-                cv2.imwrite(path + "\\" +f_name +'_'+ str(i) + '.png',bb)
-                i+=1
+                    path = not_doors_path
+                    for door in doors:
+                        if z*y<=door[0] and z*x<=door[1] and z*(y+bb_size) >= door[2] and z*(x+bb_size) >= door[3]:
+                            path = doors_path
+                    cv2.imwrite(path + "\\" +f_name +'_'+ str(z) + '_'+ str(i) + '.png',bb)
+                    i+=1
             
-            
+
+def mark_doors(file,stride,bb_size):
+    img = cv2.imread(file)
+    out = img
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    
+        
+    rows,cols = img.shape
+    for y in range(0, cols-bb_size, stride):
+        for x in range(0,rows- bb_size, stride):
+                
+                
+            bb=img[x:x+bb_size, y:y+bb_size]
+             #   bb = img[y:y+h,x:x+w]
+            #if True:# black_box(bb):
+            out = cv2.rectangle(out, (y, x), (y+bb_size, x+bb_size), (255,0,0), 2)
+    return out
+           
 
     
     
 if __name__ == "__main__":
-    test_image = "/tmp/annote.svg"
+    test_image = "D:\\ImagesGT\\IId_PL0720.png"
     
-    create_sliding_windows(50,25)
+    cv2.imwrite("D:\\IId_PL0720.png",mark_doors(test_image,25,50))
