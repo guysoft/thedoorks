@@ -13,8 +13,8 @@ def net(input_shape):
     input_img = Input(input_shape)
     # convolutional layers: (N_kernels, h_kernel, W_kernel)
     conv = BatchNormalization()(input_img)
-    conv = Convolution2D(8, 5, 5, activation='relu', border_mode='same')(conv)
-    conv = MaxPooling2D((2, 2), strides=(2, 2))(conv)
+    conv = Convolution2D(8, 3, 3, activation='relu', border_mode='same')(conv)
+    conv = MaxPooling2D((3, 3), strides=(3, 3))(conv)
     # conv = Dropout(0.25)(conv)
     conv = Convolution2D(16, 3, 3, activation='relu', border_mode='same')(conv)
     conv = MaxPooling2D((2, 2), strides=(2, 2))(conv)
@@ -22,12 +22,12 @@ def net(input_shape):
     conv = Convolution2D(32, 3, 3, activation='relu', border_mode='same')(conv)
     conv = MaxPooling2D((2, 2), strides=(2, 2))(conv)
     conv = Dropout(0.15)(conv)
-    conv = Convolution2D(32, 3, 3, activation='relu', border_mode='same')(conv)
-    conv = MaxPooling2D((2, 2), strides=(2, 2))(conv)
-    conv = Dropout(0.2)(conv)
-    conv = Convolution2D(32, 3, 3, activation='relu', border_mode='valid')(conv)
+    #conv = Convolution2D(32, 3, 3, activation='relu', border_mode='same')(conv)
+    #conv = MaxPooling2D((2, 2), strides=(2, 2))(conv)
+    #conv = Dropout(0.2)(conv)
+    #conv = Convolution2D(32, 3, 3, activation='relu', border_mode='valid')(conv)
     # conv = MaxPooling2D((2, 2), strides=(2, 2))(conv)
-    conv = Dropout(0.25)(conv)
+    #conv = Dropout(0.25)(conv)
     fc = Flatten()(conv)
 
     # fully connected layers: (N_newrons)
@@ -42,14 +42,21 @@ def net(input_shape):
 def train():
     ###
     # getting dataset from raw csv:
-    dataset_path = '/home/nate/Downloads/Challenge_FST_Train_classifier.csv'
-    reader = csv.reader(open(dataset_path, 'rb'),delimiter=',')
-    dataset = np.array(list(reader)[1:])#.astype('float')
-    p = []
-    y = []
-    for sample in dataset:
-        p.append(sample[1].split(' '))
-        y.append(sample[0].split(' '))
+    #dataset_path = '/home/nate/Downloads/Challenge_FST_Train_classifier.csv'
+    #reader = csv.reader(open(dataset_path, 'rb'),delimiter=',')
+    
+    
+    #dataset = np.array(list(reader)[1:])#.astype('float')
+    
+    #image = np.zeros((48, 48, 1), np.uint8)
+    image  = np.zeros((12, 1, 48, 48), dtype='float32')
+    
+    """"
+    p = [image, image]
+    y = [0, 0]
+    #for sample in dataset:
+    #    p.append(sample[1].split(' '))
+    #    y.append(sample[0].split(' '))
 
     p = np.array(p, dtype='float32') / 255
     y = np.array(y, dtype='uint8')
@@ -63,11 +70,15 @@ def train():
         # print x[i]#.astype('uint8')
         # cv2.imshow('x', pp)
         # cv2.waitKey(0)
+    """    
+    x = image
+    y = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0])
 
+    
     ###
     # neural net trainer:
     model_description = 'model_weights'
-    size_batch = 32
+    size_batch = len(x)
     epoches_number = 10000
     validation_portion = 0.1833
 
@@ -77,7 +88,7 @@ def train():
     Y_train = y[:int(1 - validation_portion * data_length)]
     X_test = x[int(1 - validation_portion * data_length):]
     Y_test = y[int(1 - validation_portion * data_length):]
-
+    
     # compiling net object:
     input_shape = X_train[0].shape
     model = net(input_shape)
