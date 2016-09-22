@@ -1,3 +1,9 @@
+#Dataset
+src/dataset/doors/
+src/dataset/not_doors/
+
+#network
+src/model_weights.hdf5
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
