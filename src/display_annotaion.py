@@ -29,7 +29,7 @@ def color_bounding_boxes(img, bounding_boxes):
     :param bounding boxes: a list of bounding boxes, format [top, left, right, bottom]
     :returns: the same img after we edited it
     """
-    for door in doors:
+    for door in bounding_boxes:
         cv2.rectangle(image, (door[0], door[1]), (door[2], door[3]), (255,0,0), 2)
     return img
 
