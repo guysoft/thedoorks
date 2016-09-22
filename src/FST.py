@@ -7,7 +7,45 @@ from keras.models import Model
 from keras.layers import BatchNormalization
 from keras.layers import Input, Dense, Dropout, Flatten, Convolution2D, MaxPooling2D
 from keras.preprocessing.image import ImageDataGenerator
+from misc_utils import make_grey
 
+from sklearn.utils import shuffle
+
+def load_dataset():
+    """Gets the location of the dataset"""
+    
+    dataset_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dataset")
+    doors_path = os.path.join(dataset_path, "doors")
+    not_doors_path = os.path.join(dataset_path, "not_doors")
+    
+    opencv_doors = []
+    is_door = []
+    
+    def add_folder(folder, is_doors):
+        """
+        Itrates over a folder and sub folders, and adds the images to the dataset
+        """
+        for subdir, dirs, files in os.walk(folder):
+            for file_name in files:
+                full_name = os.path.join(subdir, file_name)
+                opencv_doors.append(make_grey(cv2.imread(full_name)))
+                is_door.append(is_doors)
+        return
+    
+    add_folder(doors_path, 1)
+    add_folder(not_doors_path, 0)
+    
+    x_tmp, shuffled2 = shuffle(opencv_doors, is_door)
+    
+    # This takes the opencv images array, and shifts them to the keras model
+    x = []
+    for i in range(len(x_tmp)):
+        x_tmp2 = np.reshape(x_tmp[i], (50, 50, 1))
+        x.append(np.transpose(x_tmp2, (2, 0, 1)))
+    x = np.array(x) # Ok, now x is in keras's format, note its transposed and reshaped
+    
+    
+    return x, np.array(shuffled2)
 
 def net(input_shape):
     input_img = Input(input_shape)
@@ -41,38 +79,9 @@ def net(input_shape):
 
 def train():
     ###
-    # getting dataset from raw csv:
-    #dataset_path = '/home/nate/Downloads/Challenge_FST_Train_classifier.csv'
-    #reader = csv.reader(open(dataset_path, 'rb'),delimiter=',')
+    # getting dataset from png images:
     
-    
-    #dataset = np.array(list(reader)[1:])#.astype('float')
-    
-    #image = np.zeros((48, 48, 1), np.uint8)
-    image  = np.zeros((12, 1, 48, 48), dtype='float32')
-    
-    """"
-    p = [image, image]
-    y = [0, 0]
-    #for sample in dataset:
-    #    p.append(sample[1].split(' '))
-    #    y.append(sample[0].split(' '))
-
-    p = np.array(p, dtype='float32') / 255
-    y = np.array(y, dtype='uint8')
-
-    ###
-    # reshaping to image (from 1D):
-    x = np.zeros((len(p), 1, 48, 48), dtype='float32')
-    for i in range(len(p)):
-        pp = np.reshape(p[i], (48, 48, 1))
-        x[i] = np.transpose(pp, (2, 0, 1))
-        # print x[i]#.astype('uint8')
-        # cv2.imshow('x', pp)
-        # cv2.waitKey(0)
-    """    
-    x = image
-    y = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0])
+    x, y = load_dataset()
 
     
     ###
@@ -125,7 +134,7 @@ def train():
 def emotion_detector(input_images_list):
 
     # fit to net:
-    input_shape = (48, 48)
+    input_shape = (50, 50)
     output_images_list = []
     for image in input_images_list:
         shape = image.shape
