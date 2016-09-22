@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 import os.path
+import glob
 import json
 import argparse
+import cv2
 
 def get_bounding_box(points):
     left = int(float(points[0][0]))
@@ -65,8 +67,46 @@ def hangleArgs():
     args = parser.parse_args()
     return args
     
+BOUNDING_BOX_FD = 'BBs\\'
+imglib = "D:\\ImagesGT\\"
+
+def create_sliding_windows(stride,bb_size):
+    
+    dataset_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dataset")
+    doors_path = os.path.join(dataset_path, "doors")
+    not_doors_path = os.path.join(dataset_path, "not_doors")
+    
+    img = []
+    for file in glob.glob(imglib +'*.svg'):
+        filename= file[:file.rfind("_gt")]+".png"
+        print (filename)
+        img = cv2.imread(filename)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        
+        doors = prase_svg(file)["doors"]
+        
+        f_name = filename.split('\\')
+        f_name = f_name[len(f_name)-1].split('.')[0]
+       
+        i=0
+        rows,cols = img.shape
+        for y in range(0, cols-bb_size, stride):
+            for x in range(0,rows- bb_size, stride):
+                
+                bb=img[x:x+bb_size, y:y+bb_size]
+             #   bb = img[y:y+h,x:x+w]
+                path = not_doors_path
+                for door in doors:
+                    if y<=door[0] and x<=door[1] and y+bb_size >= door[2] and x+bb_size >= door[3]:
+                        path = doors_path
+                cv2.imwrite(path + "\\" +f_name +'_'+ str(i) + '.png',bb)
+                i+=1
+            
+            
+
+    
     
 if __name__ == "__main__":
     test_image = "/tmp/annote.svg"
     
-    print(json.dumps(prase_svg(hangleArgs().svg_file)))
+    create_sliding_windows(50,25)
