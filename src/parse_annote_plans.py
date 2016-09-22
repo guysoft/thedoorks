@@ -4,13 +4,13 @@ import json
 import argparse
 
 def get_bounding_box(points):
-    left = int(points[0][0])
-    top = int(points[0][1])
-    right = int(points[0][0])
-    bottom= int(points[0][1])
+    left = int(float(points[0][0]))
+    top = int(float(points[0][1]))
+    right = int(float(points[0][0]))
+    bottom= int(float(points[0][1]))
 
     for point in points:
-        point = [int(point[0]), int(point[1])]
+        point = [int(float(point[0])), int(float(point[1]))]
         if left >  point[0]:
             left = point[0]
         if top > point[1]:
