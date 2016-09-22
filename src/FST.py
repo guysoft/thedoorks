@@ -42,7 +42,7 @@ def load_dataset():
     for i in range(len(x_tmp)):
         x_tmp2 = np.reshape(x_tmp[i], (50, 50, 1))
         x.append(np.transpose(x_tmp2, (2, 0, 1)))
-    x = np.array(x) # Ok, now x is in keras's format, note its transposed and reshaped
+    x = np.array(x)/ 255.0 # Ok, now x is in keras's format, note its transposed and reshaped
     
     
     return x, np.array(shuffled2)
@@ -110,12 +110,13 @@ def train():
     checkpointer = ModelCheckpoint(model_description + '.hdf5', verbose=1, save_best_only=True)
 
     datagen = ImageDataGenerator(
+        zoom_range=[0.6, 1.],
         featurewise_center=False,  # set input mean to 0 over the dataset
         samplewise_center=False,  # set each sample mean to 0
         featurewise_std_normalization=False,  # divide inputs by std of the dataset
         samplewise_std_normalization=False,  # divide each input by its std
         zca_whitening=False,  # apply ZCA whitening
-        rotation_range=20,  # randomly rotate images in the range (degrees, 0 to 180)
+        rotation_range=360,  # randomly rotate images in the range (degrees,output_image 0 to 180)
         width_shift_range=0.1,  # randomly shift images horizontally (fraction of total width)
         height_shift_range=0.1,  # randomly shift images vertically (fraction of total height)
         horizontal_flip=True,  # randomly flip images
@@ -134,33 +135,19 @@ def train():
 def emotion_detector(input_images_list):
 
     # fit to net:
-    input_shape = (50, 50)
+    input_shape = (1, 50, 50)
+    
     output_images_list = []
     for image in input_images_list:
-        shape = image.shape
-        output_images_size = shape[:2]
-        if shape[2] > 1:
-            image = cv2.cvtColot(image, cv2.BGR2GRAY)
-        # shrinking oversized images:
-        if image.shape[0] > input_shape[0] or image.shape[1] > input_shape[1]:
-            if image.shape[0] > image.shape[1]:
-                scale = 1.0 * input_shape[0] / image.shape[0]
-            else:
-                scale = 1.0 * input_shape[1] / image.shape[1]
-            image = cv2.resize(image.copy(), input_shape)
-            output_images_size = image.shape[:2]
+        a = image.copy()
 
-        border_type = cv2.BORDER_REPLICATE
-        # getting image size:
-        h_max, w_max = input_shape  # output_size
-        h, w = output_images_size
-        w_shift = w_max - w
-        h_shift = h_max - h
-        output_image = cv2.copyMakeBorder(image.copy(), h_shift/2, h_shift/2, w_shift/2, w_shift/2, border_type)
-        output_image = cv2.resize(output_image, input_shape)
-        output_image = np.transpose(output_image, (2, 0, 1))
-        output_image.append(output_image)
+        output_image_tmp = np.reshape(a, (50, 50, 1))
+        output_image = np.transpose(output_image_tmp, (2, 0, 1))
+        output_images_list.append(output_image)
         output_images_list = np.array(output_images_list, dtype='float32')/255
+        
+        
+    print(output_images_list.shape)
 
     # run test on image list:
     model = net(input_shape)
@@ -168,9 +155,23 @@ def emotion_detector(input_images_list):
     model.load_weights(os.path.join(current_directory_name, 'model_weights.hdf5'))
     optimizer_method = 'adam'
     model.compile(loss='binary_crossentropy', optimizer=optimizer_method, metrics=['accuracy'])
-    probability = model.predict_proba(output_images_list, batch_size=len(output_images_list))
-    classes = model.predict_classes(output_images_list, batch_size=len(output_images_list))
+    #probability = model.predict_proba(output_images_list, batch_size=len(output_images_list))
+    classes = model.predict(output_images_list, batch_size=len(output_images_list))
+    
+    return classes
 
-    return probability, classes
+#train()
 
-train()
+dataset_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dataset")
+doors_path = os.path.join(dataset_path, "doors")
+not_doors_path = os.path.join(dataset_path, "not_doors")
+
+
+door = os.path.join(doors_path, "2_img.svg2.png")
+not_door = os.path.join(not_doors_path, "3_1_1760.png")
+
+image = cv2.imread(not_door)
+image = make_grey(image)
+classes = emotion_detector([image])
+
+print(classes)
