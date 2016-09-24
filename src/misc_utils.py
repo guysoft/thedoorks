@@ -26,10 +26,13 @@ def make_grey(img):
     gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
     return gray
 
-def is_not_boring_imaege(gray):
-    hessian_threshold  = 100
-    KP_MIN = 30
-    surf = cv2.ORB_create(hessian_threshold)
+def is_not_boring_image(gray):
+    hessian_threshold  = 1
+    KP_MIN = 2
+    KP_MAX = 15
+    surf = cv2.BRISK_create(1)
     kp, des = surf.detectAndCompute(gray, None)
-    return len(kp) > KP_MIN
+    if len(kp) > 3:
+        print(len(kp))
+    return len(kp) > KP_MIN and len(kp) < KP_MAX
 

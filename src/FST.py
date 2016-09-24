@@ -132,7 +132,7 @@ def train():
                         callbacks=[checkpointer], class_weight=None, max_q_size=10, samples_per_epoch=len(X_train))
 
 
-def emotion_detector(input_images_list):
+def door_detector(input_images_list):
 
     # fit to net:
     input_shape = (1, 50, 50)
@@ -144,7 +144,7 @@ def emotion_detector(input_images_list):
         output_image_tmp = np.reshape(a, (50, 50, 1))
         output_image = np.transpose(output_image_tmp, (2, 0, 1))
         output_images_list.append(output_image)
-        output_images_list = np.array(output_images_list, dtype='float32')/255
+    output_images_list = np.array(output_images_list, dtype='float32')/255.0
         
         
     print(output_images_list.shape)
@@ -160,18 +160,31 @@ def emotion_detector(input_images_list):
     
     return classes
 
-#train()
-
-dataset_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dataset")
-doors_path = os.path.join(dataset_path, "doors")
-not_doors_path = os.path.join(dataset_path, "not_doors")
 
 
-door = os.path.join(doors_path, "2_img.svg2.png")
-not_door = os.path.join(not_doors_path, "3_1_1760.png")
+def test_image_batch(image_list):
+    #for image in image_list:
+    #    image = make_grey(image)
+    classes = door_detector(image_list)
 
-image = cv2.imread(not_door)
-image = make_grey(image)
-classes = emotion_detector([image])
+    return classes
+    
+if __name__ == "__main__":
+    """
+    # Uncomment this and comment train() to switch from traning to prediction
+    dataset_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dataset")
+    doors_path = os.path.join(dataset_path, "doors")
+    not_doors_path = os.path.join(dataset_path, "not_doors")
 
-print(classes)
+
+    door = os.path.join(doors_path, "2_img.svg2.png")
+    not_door = os.path.join(not_doors_path, "3_1_1760.png")
+
+    image = cv2.imread("/home/guy/workspace/doorky/thedoorks/src/dataset/test_not_doors/3_2_534.png")
+    image = make_grey(image)
+    classes = door_detector([image])
+
+    print(classes)
+    """
+    train()
+    

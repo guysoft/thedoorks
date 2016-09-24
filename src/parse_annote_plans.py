@@ -6,6 +6,9 @@ import argparse
 import cv2
 import numpy
 import shutil
+from FST import test_image_batch
+from misc_utils import is_not_boring_image
+from joblib import Parallel, delayed
 
 def get_bounding_box(points):
     left = int(float(points[0][0]))
@@ -118,25 +121,44 @@ def create_sliding_windows(stride,bb_size):
 
 def mark_doors(file,stride,bb_size):
     img = cv2.imread(file)
-    out = img
+    out = cv_resize(img, 0.25)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     
-        
+    image_list = []
+    bounding_box_list = []
+    
     rows,cols = img.shape
     for y in range(0, cols-bb_size, stride):
         for x in range(0,rows- bb_size, stride):
                 
                 
             bb=img[x:x+bb_size, y:y+bb_size]
+            
+            
+            #if is_not_boring_image(bb):
+            image_list.append(bb)
+            bounding_box_list.append([x, y, x+bb_size, y+bb_size])
+            
              #   bb = img[y:y+h,x:x+w]
             #if True:# black_box(bb):
-            out = cv2.rectangle(out, (y, x), (y+bb_size, x+bb_size), (255,0,0), 2)
+            #out = cv2.rectangle(out, (y, x), (y+bb_size, x+bb_size), (255,0,0), 2)
+            
+    probs = test_image_batch(image_list)
+    print(probs)
+    
+    for i in range(len(bounding_box_list)):
+        if probs[i] > 0.8:
+            out = cv2.rectangle(out, (bounding_box_list[i][1], bounding_box_list[i][0]), (bounding_box_list[i][1]+bb_size, bounding_box_list[i][0]+bb_size), (int(255 * (1- probs[i])),255,255), 2)
+    
+    
     return out
            
 
     
     
 if __name__ == "__main__":
-    test_image = "D:\\ImagesGT\\IId_PL0720.png"
+    import sys
+    test_image = sys.argv[1]
     
-    cv2.imwrite("D:\\IId_PL0720.png",mark_doors(test_image,25,50))
+    file_path_out = sys.argv[2]
+    cv2.imwrite(file_path_out, mark_doors(test_image,25,50))
